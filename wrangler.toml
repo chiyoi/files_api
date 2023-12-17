@@ -1,0 +1,10 @@
+name = "files_api"
+main = "index.ts"
+compatibility_date = "2023-11-21"
+
+[vars]
+VERSION = "Files API v0.4.0"
+
+[[r2_buckets]]
+binding = "files"
+bucket_name = "files"

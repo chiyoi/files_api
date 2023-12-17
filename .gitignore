@@ -1,0 +1,10 @@
+.DS_Store
+.vscode
+*.swp
+
+# node
+node_modules
+
+# wrangler
+.wrangler
+.dev.vars
