@@ -1,40 +1,49 @@
-import { IRequest, error, json } from 'itty-router'
+import { IRequest, json } from 'itty-router'
 import { Env } from '.'
+import { z } from 'zod'
 
 export async function withResolvedKey(request: IRequest, _: Env) {
   const { params: { address, filename } } = request
-  request.params.key = filename ? [address, decodeURIComponent(filename)].join('/') : address
+  request.params.key = filename ? [address.toLowerCase(), decodeURIComponent(filename)].join('/') : address
 }
 
-export async function mayListFiles(request: IRequest, env: Env) {
+export async function listFiles(request: IRequest, env: Env) {
   const { params: { key } } = request
-  if (!!request.query['list']) {
-    const list = await env.files.list({ prefix: key })
-    return json(list.objects.map(item => ({
-      key: item.key,
-      size: item.size,
-      uploaded: item.uploaded,
-    })))
-  }
-}
-
-export async function getFile(request: IRequest, env: Env) {
-  const { params: { key } } = request
-  const item = await env.files.get(key)
-  if (item === null) return error(404, 'File not found.')
-  const headers = new Headers()
-  item.writeHttpMetadata(headers)
-  return new Response(item.body, { headers })
+  const list = await env.files.list({ prefix: key })
+  const resolved = (await Promise.all(list.objects.map(async ({ key }) => {
+    const cid = (await env.files.get(key))?.text()
+    if (!cid) return
+    return { key, cid }
+  }))).filter(e => !!e)
+  return json(resolved)
 }
 
 export async function putFile(request: IRequest, env: Env) {
   let { params: { key } } = request
-  await env.files.put(key, request.body)
-  return json({ key })
+
+  const form = new FormData()
+  form.append('file', await request.blob())
+
+  const pinResp = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${env.PINATA_JWT_KEY}`,
+    },
+    body: form,
+  })
+  const info = z.object({
+    IpfsHash: z.string(),
+    PinSize: z.number(),
+    Timestamp: z.coerce.date(),
+  }).parse(await pinResp.json())
+
+  await env.files.put(key, info.IpfsHash)
+  return json({ put: key })
 }
 
 export async function deleteFile(request: IRequest, env: Env) {
   const { params: { key } } = request
   await env.files.delete(key)
-  return json({ key })
+  return json({ deleted: key })
 }

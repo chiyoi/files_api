@@ -1,6 +1,6 @@
 import { error, json, Router } from 'itty-router'
 import { withAuth } from './auth'
-import { deleteFile, mayListFiles, getFile, putFile, withResolvedKey } from './files'
+import { listFiles, deleteFile, putFile, withResolvedKey } from './files'
 
 export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => router()
@@ -11,12 +11,11 @@ export default {
 function router() {
   const router = Router()
   router.all('/ping', () => json('Pong!'))
-  router.all('/version', (_, env: Env) => json(env.VERSION))
 
-  router.get('/api/:address', withAuth, withResolvedKey, mayListFiles, getFile)
+  router.get('/api/:address', withAuth, withResolvedKey, listFiles)
   router.all('/api/:address', () => error(405, 'Method not allowed.'))
 
-  router.get('/api/:address/:filename', withAuth, withResolvedKey, mayListFiles, getFile)
+  router.get('/api/:address/:filename', withAuth, withResolvedKey, listFiles)
   router.put('/api/:address/:filename', withAuth, withResolvedKey, putFile)
   router.delete('/api/:address/:filename', withAuth, withResolvedKey, deleteFile)
   router.all('/api/:address/:filename', () => error(405, 'Method not allowed.'))
@@ -27,5 +26,6 @@ function router() {
 
 export interface Env {
   VERSION: string,
+  PINATA_JWT_KEY: string,
   files: R2Bucket,
 }
