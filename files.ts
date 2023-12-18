@@ -1,13 +1,17 @@
 import { IRequest, error, json } from 'itty-router'
 import { Env } from '.'
 
-export async function mayListFiles(request: IRequest, env: Env) {
+export async function withResolvedKey(request: IRequest, _: Env) {
   const { params: { address, filename } } = request
-  const key = filename ? [address, filename].join('/') : address
+  request.params.key = filename ? [address, decodeURIComponent(filename)].join('/') : address
+}
+
+export async function mayListFiles(request: IRequest, env: Env) {
+  const { params: { key } } = request
   if (!!request.query['list']) {
     const list = await env.files.list({ prefix: key })
     return json(list.objects.map(item => ({
-      key: item.key.slice(`${address}/`.length),
+      key: item.key,
       size: item.size,
       uploaded: item.uploaded,
     })))
@@ -15,8 +19,7 @@ export async function mayListFiles(request: IRequest, env: Env) {
 }
 
 export async function getFile(request: IRequest, env: Env) {
-  const { params: { address, filename } } = request
-  const key = filename ? [address, filename].join('/') : address
+  const { params: { key } } = request
   const item = await env.files.get(key)
   if (item === null) return error(404, 'File not found.')
   const headers = new Headers()
@@ -25,16 +28,13 @@ export async function getFile(request: IRequest, env: Env) {
 }
 
 export async function putFile(request: IRequest, env: Env) {
-  let { params: { address, filename } } = request
-  filename = decodeURIComponent(filename)
-  const key = [address, filename].join('/')
+  let { params: { key } } = request
   await env.files.put(key, request.body)
   return json({ key })
 }
 
 export async function deleteFile(request: IRequest, env: Env) {
-  const { params: { address, filename } } = request
-  const key = [address, filename].join('/')
+  const { params: { key } } = request
   await env.files.delete(key)
   return json({ key })
 }
