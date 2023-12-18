@@ -11,7 +11,7 @@ export async function listFiles(request: IRequest, env: Env) {
   const { params: { key } } = request
   const list = await env.files.list({ prefix: key })
   const resolved = (await Promise.all(list.objects.map(async ({ key }) => {
-    const cid = (await env.files.get(key))?.text()
+    const cid = await (await env.files.get(key))?.text()
     if (!cid) return
     return { key, cid }
   }))).filter(e => !!e)
