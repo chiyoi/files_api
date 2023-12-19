@@ -1,6 +1,9 @@
 name = "files_api"
-main = "index.ts"
+main = "src/index.ts"
 compatibility_date = "2023-11-21"
+
+[vars]
+PINATA_ENDPOINT = "https://api.pinata.cloud"
 
 [[r2_buckets]]
 binding = "files"
