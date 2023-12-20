@@ -4,7 +4,6 @@ import { Env, isHex } from '.'
 export async function withNameResolved(request: IRequest, env: Env) {
   const { params: { address: name } } = request
   const address = await (await env.files.get(`addresses/${name}`))?.text()
-  console.debug(address)
   if (address !== undefined) request.params.address = address
 }
 

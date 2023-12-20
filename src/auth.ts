@@ -1,5 +1,6 @@
 import { IRequest, error } from 'itty-router'
-import { isHex, verifyMessage } from 'viem'
+import { isHex, createPublicClient, http } from 'viem'
+import { sepolia } from 'viem/chains'
 import { Env } from '.'
 
 export async function withAuth(request: IRequest, _: Env) {
@@ -13,5 +14,5 @@ export async function withAuth(request: IRequest, _: Env) {
   if (!isHex(signature)) return error(401, 'Malformed token.')
 
   const message = atob(messageB64)
-  if (!await verifyMessage({ address, message, signature })) return error(403, 'Invalid signature.')
+  if (!await createPublicClient({ chain: sepolia, transport: http() }).verifyMessage({ address, message, signature })) return error(403, 'Invalid signature.')
 }
