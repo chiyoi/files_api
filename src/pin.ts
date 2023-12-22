@@ -1,6 +1,6 @@
 import { IRequest, error } from 'itty-router'
 import { z } from 'zod'
-import { Env } from '.'
+import { Env } from '@/src'
 
 export async function withCIDFromFiles(request: IRequest, env: Env) {
   const { params: { key } } = request

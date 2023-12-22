@@ -1,5 +1,5 @@
 import { IRequest, json } from 'itty-router'
-import { Env } from '.'
+import { Env } from '@/src'
 
 export async function withKeyResolved(request: IRequest, _: Env) {
   const { params: { address, filename } } = request

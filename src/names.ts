@@ -1,5 +1,5 @@
 import { IRequest, error, json } from 'itty-router'
-import { Env, isHex } from '.'
+import { Env } from '@/src'
 
 export async function withNameResolved(request: IRequest, env: Env) {
   const { params: { address: name } } = request

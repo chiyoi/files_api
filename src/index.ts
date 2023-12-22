@@ -1,8 +1,8 @@
-import { error, IRequest, Router } from 'itty-router'
-import { withAuth } from './auth'
-import { listFiles, getFile, deleteFile, putFile, withKeyResolved } from './files'
-import { getAddressName, resolveName, setAddressName, withNameResolved } from './names'
-import { withCIDFromFiles, withFilePinned, withFileUnpinned } from './pin'
+import { error, Router } from 'itty-router'
+import { withAuth } from '@/src/auth'
+import { listFiles, getFile, deleteFile, putFile, withKeyResolved } from '@/src/files'
+import { getAddressName, resolveName, setAddressName, withNameResolved } from '@/src/names'
+import { withCIDFromFiles, withFilePinned, withFileUnpinned } from '@/src/pin'
 
 export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => router()
@@ -38,9 +38,10 @@ export function isHex(s: string): s is `0x${string}` {
 }
 
 export interface Env {
-  VERSION: string,
   IPFS_GATEWAY_ENDPOINT: string,
   PINATA_ENDPOINT: string,
   PINATA_JWT_KEY: string,
+  BILLING_CONTRACT_ADDRESS: `0x${string}`,
+  BILLING_OWNER_PRIVATE_KEY: `0x${string}`,
   files: R2Bucket,
 }
