@@ -21,6 +21,8 @@ function router() {
   router.put('/api/names/:address', withAuth, setAddressName)
   router.all('/api/names/:address', () => error(405, 'Endpoint <Address Name> only supports GET and PUT.'))
 
+  router.all('/api/bills/:address')
+
   router.get('/api/files/:address', withNameResolved, withKeyResolved, listFiles)
   router.all('/api/files/:address', () => error(405, 'Endpoint <List Files> is readonly.'))
 

@@ -1,16 +1,19 @@
 import { IRequest, error, json } from 'itty-router'
-import { Env } from '@/src'
+import { Env, isHex } from '@/src'
 
 export async function withNameResolved(request: IRequest, env: Env) {
   const { params: { address: name } } = request
-  const address = await (await env.files.get(`addresses/${name}`))?.text()
-  if (address !== undefined) request.params.address = address
+  if (!isHex(name)) {
+    const address = await (await env.files.get(`addresses/${name}`))?.text()
+    if (address === undefined) return error(404, 'Name not exists.')
+    request.params.address = address
+  }
 }
 
 export async function resolveName(request: IRequest, env: Env) {
   const { params: { name } } = request
   const address = await (await env.files.get(`addresses/${name}`))?.text()
-  if (address === undefined) return error(404, 'Name not exist.')
+  if (address === undefined) return error(404, 'Name not exists.')
   return new Response(address)
 }
 
@@ -24,6 +27,7 @@ export async function setAddressName(request: IRequest, env: Env) {
   const { params: { address } } = request
   const name = await request.text()
   if (name === '') return error(400, 'Name should not be empty.')
+  if (isHex(name)) return error(400, 'Name should not be an address like `0x${string}`.')
   const conflict = await env.files.get(`addresses/${name}`)
   if (conflict !== null) return error(409, 'Name is already registered.')
   const oldName = await (await env.files.get(`names/${address}`))?.text()

@@ -1,8 +1,9 @@
-import { IRequest, json } from 'itty-router'
-import { Env } from '@/src'
+import { IRequest, error, json } from 'itty-router'
+import { Env, isHex } from '@/src'
 
 export async function withKeyResolved(request: IRequest, _: Env) {
   const { params: { address, filename } } = request
+  if (!isHex(address)) return error(400, 'Address should be like `0x${string}`')
   request.params.address = address.toLowerCase()
   if (filename !== undefined) {
     request.params.filename = decodeURIComponent(filename)
