@@ -1,7 +1,8 @@
 # Files API
-API for [files.neko03.moe](https://files.neko03.moe)
+API for [chiyoi/files](https://github.com/chiyoi/files).
 
 ## Development
-Cloudflare R2 storage.
+Cloudflare R2 storage.\
+Message signature for authorization.
 
-Ethereum signature authorization.
+Developed with TypeScript, deployed with Cloudflare Workers.
