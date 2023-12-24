@@ -6,7 +6,10 @@ import { withCIDFromFiles, withFilePinned, withFileUnpinned } from '@/src/pin'
 export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => router()
     .handle(request, env, ctx)
-    .catch(error)
+    .catch(error),
+  async scheduled(event: Event, env: Env, ctx: ExecutionContext) {
+
+  },
 }
 
 function router() {

@@ -10,3 +10,7 @@ ENS_ENDPOINT = "https://ens.neko03.workers.dev/ens"
 [[r2_buckets]]
 binding = "files"
 bucket_name = "files"
+
+[[routes]]
+pattern = "files.neko03.moe/api/*"
+zone_name = "neko03.moe"
