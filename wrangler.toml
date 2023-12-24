@@ -5,6 +5,7 @@ compatibility_date = "2023-11-21"
 [vars]
 PINATA_ENDPOINT = "https://api.pinata.cloud"
 IPFS_GATEWAY_ENDPOINT = "https://cf-ipfs.com"
+ENS_ENDPOINT = "https://ens.neko03.workers.dev/ens"
 
 [[r2_buckets]]
 binding = "files"

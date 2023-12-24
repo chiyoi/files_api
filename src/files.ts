@@ -1,5 +1,18 @@
 import { IRequest, error, json } from 'itty-router'
-import { Env, isHex } from '@/src'
+import { Env } from '@/src'
+import { isHex } from 'viem'
+
+export async function withNameResolved(request: IRequest, env: Env) {
+  const { params: { address: name } } = request
+  if (!isHex(name)) {
+    const response = await fetch(`${env.ENS_ENDPOINT}/${name}/address`)
+    if (!response.ok) {
+      if (response.status === 404) return error(400, 'Name not exist.')
+      console.warn(`Resolve name error: ${await response.text()}`)
+    }
+    request.params.address = await response.text()
+  }
+}
 
 export async function withKeyResolved(request: IRequest, _: Env) {
   const { params: { address, filename } } = request
