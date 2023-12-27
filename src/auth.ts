@@ -16,3 +16,7 @@ export async function withAuth(request: IRequest, _: Env) {
   const message = atob(messageB64)
   if (!await publicClient.verifyMessage({ address, message, signature })) return error(403, 'Invalid signature.')
 }
+
+export async function withSecretAuth(request: IRequest, env: Env) {
+
+}

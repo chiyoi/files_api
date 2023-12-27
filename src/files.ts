@@ -1,6 +1,7 @@
 import { IRequest, error, json } from 'itty-router'
 import { Env } from '@/src'
 import { isHex } from 'viem'
+import { z } from 'zod'
 
 export async function withNameResolved(request: IRequest, env: Env) {
   const { params: { address: name } } = request
@@ -39,9 +40,36 @@ export async function listFiles(request: IRequest, env: Env) {
 }
 
 export async function putFile(request: IRequest, env: Env) {
-  let { params: { key, cid } } = request
+  const { params: { key, cid } } = request
   await env.files.put(key, cid)
   return json({ put: key })
+}
+
+export async function startUploadFile(request: IRequest, env: Env) {
+  const { params: { key } } = request
+  const upload = await env.files.createMultipartUpload(key)
+  return json({ uploadID: upload.uploadId })
+}
+
+export async function uploadFilePart(request: IRequest, env: Env) {
+  const { params: { key, uploadID, part } } = request
+  if (request.body === null) return error(400, 'Body should not be null.')
+  const upload = await env.files.resumeMultipartUpload(key, uploadID)
+  const uploaded = await upload.uploadPart(Number(part), request.body)
+  return json(uploaded)
+}
+
+export async function completeUploadFile(request: IRequest, env: Env) {
+  const { params: { key, uploadID } } = request
+  const parsed = z.object({
+    partNumber: z.number(),
+    etag: z.string(),
+  }).array().safeParse(await request.json())
+  if (!parsed.success) return error(400, 'Malformed request body.')
+
+  const upload = await env.files.resumeMultipartUpload(key, uploadID)
+  await upload.complete(parsed.data)
+  return json({ completed: key })
 }
 
 export async function getFile(request: IRequest, env: Env) {
