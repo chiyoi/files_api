@@ -14,7 +14,7 @@ export default {
 
 function router() {
   const router = Router()
-  router.all('/ping', () => new Response('Pong!'))
+  router.all('/ping', () => new Response('Pong!\n'))
 
   router.get('/api/:address/files', withNameResolved, withKeyResolved, listFiles)
   router.get('/api/:address/files/:filename', withNameResolved, withKeyResolved, withCIDFromFiles, getFile)
