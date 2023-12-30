@@ -20,7 +20,7 @@ export function walletClient(env: Env) {
 
 export function billingContract(walletClient: WalletClient, env: Env) {
   return getContract({
-    address: '0xFBA3912Ca04dd458c843e2EE08967fC04f3579c2',
+    address: env.BILLING_CONTRACT_ADDRESS,
     abi: BillingAccount,
     walletClient,
   })
