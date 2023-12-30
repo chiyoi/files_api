@@ -3,9 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2023-11-21"
 
 [vars]
-PINATA_ENDPOINT = "https://api.pinata.cloud"
-IPFS_GATEWAY_ENDPOINT = "https://cf-ipfs.com"
+BILLING_CONTRACT_ADDRESS = "0x377e2782Fc6284C3c085c32EF0fAe1471CB10416"
 ENS_ENDPOINT = "https://ens.neko03.workers.dev/ens"
+IPFS_GATEWAY_ENDPOINT = "https://cf-ipfs.com"
+PINATA_ENDPOINT = "https://api.pinata.cloud"
 
 [[r2_buckets]]
 binding = "files"

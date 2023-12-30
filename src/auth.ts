@@ -1,9 +1,9 @@
 import { IRequest, error } from 'itty-router'
 import { isHex } from 'viem'
 import { Env } from '@/src'
-import { publicClient } from '@/src/clients'
+import { publicClient } from '@/src/wallets'
 
-export async function withAuth(request: IRequest, _: Env) {
+export async function withAuth(request: IRequest, env: Env) {
   const { params: { address } } = request
   if (!isHex(address)) return error(400, 'Invalid address.')
 
@@ -15,8 +15,5 @@ export async function withAuth(request: IRequest, _: Env) {
 
   const message = atob(messageB64)
   if (!await publicClient.verifyMessage({ address, message, signature })) return error(403, 'Invalid signature.')
-}
-
-export async function withSecretAuth(request: IRequest, env: Env) {
-
+  await env.files.put(`addresses/${address}`, '')
 }

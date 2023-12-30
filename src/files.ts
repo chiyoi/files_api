@@ -27,7 +27,7 @@ export async function withKeyResolved(request: IRequest, _: Env) {
   }
 }
 
-export async function listFiles(request: IRequest, env: Env) {
+export async function handleListWithinKey(request: IRequest, env: Env) {
   const { params: { address, key: prefix } } = request
   const list = await env.files.list({ prefix })
   const resolved = (await Promise.all(list.objects.map(async ({ key }) => {
@@ -39,46 +39,55 @@ export async function listFiles(request: IRequest, env: Env) {
   return json(resolved)
 }
 
-export async function putFile(request: IRequest, env: Env) {
+export async function handleGetFileFromCID(request: IRequest, env: Env) {
+  let { params: { cid } } = request
+  return Response.redirect(`${env.IPFS_GATEWAY_ENDPOINT}/ipfs/${cid}`, 307)
+}
+
+export async function handleDeleteKey(request: IRequest, env: Env) {
+  const { params: { key } } = request
+  await env.files.delete(key)
+  return json({ deleted: key })
+}
+
+export async function handlePutFileCID(request: IRequest, env: Env) {
   const { params: { key, cid } } = request
   await env.files.put(key, cid)
   return json({ put: key })
 }
 
-export async function startUploadFile(request: IRequest, env: Env) {
+export async function handleGetFile(request: IRequest, env: Env) {
+  const { params: { key } } = request
+  const file = await env.files.get(key)
+  if (file === null) return error(404, 'File not exist.')
+  const headers = new Headers()
+  file.writeHttpMetadata(headers)
+  return new Response(file.body, { headers })
+}
+
+export async function handleStartUploadFile(request: IRequest, env: Env) {
   const { params: { key } } = request
   const upload = await env.files.createMultipartUpload(key)
   return json({ uploadID: upload.uploadId })
 }
 
-export async function uploadFilePart(request: IRequest, env: Env) {
-  const { params: { key, uploadID, part } } = request
+export async function handleUploadFilePart(request: IRequest, env: Env) {
+  const { params: { key, upload_id, part } } = request
   if (request.body === null) return error(400, 'Body should not be null.')
-  const upload = await env.files.resumeMultipartUpload(key, uploadID)
+  const upload = await env.files.resumeMultipartUpload(key, upload_id)
   const uploaded = await upload.uploadPart(Number(part), request.body)
   return json(uploaded)
 }
 
-export async function completeUploadFile(request: IRequest, env: Env) {
-  const { params: { key, uploadID } } = request
+export async function handleCompleteUploadFile(request: IRequest, env: Env) {
+  const { params: { key, upload_id } } = request
   const parsed = z.object({
     partNumber: z.number(),
     etag: z.string(),
   }).array().safeParse(await request.json())
   if (!parsed.success) return error(400, 'Malformed request body.')
 
-  const upload = await env.files.resumeMultipartUpload(key, uploadID)
+  const upload = await env.files.resumeMultipartUpload(key, upload_id)
   await upload.complete(parsed.data)
   return json({ completed: key })
-}
-
-export async function getFile(request: IRequest, env: Env) {
-  let { params: { cid } } = request
-  return Response.redirect(`${env.IPFS_GATEWAY_ENDPOINT}/ipfs/${cid}`, 307)
-}
-
-export async function deleteFile(request: IRequest, env: Env) {
-  const { params: { key } } = request
-  await env.files.delete(key)
-  return json({ deleted: key })
 }
