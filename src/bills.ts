@@ -1,7 +1,7 @@
 import { IRequest, json } from 'itty-router'
 import { Env } from '@/src'
 import { z } from 'zod'
-import { billingContract, walletClient } from '@/src/wallets'
+import { billingContract, walletClient } from '@/src/accounts'
 import { isHex } from 'viem'
 import { sepolia } from 'viem/chains'
 

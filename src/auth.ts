@@ -1,7 +1,7 @@
 import { IRequest, error } from 'itty-router'
 import { isHex } from 'viem'
 import { Env } from '@/src'
-import { publicClient } from '@/src/wallets'
+import { publicClient } from '@/src/accounts'
 
 export async function withAuth(request: IRequest, env: Env) {
   const { params: { address } } = request
@@ -16,4 +16,5 @@ export async function withAuth(request: IRequest, env: Env) {
   const message = atob(messageB64)
   if (!await publicClient.verifyMessage({ address, message, signature })) return error(403, 'Invalid signature.')
   await env.files.put(`addresses/${address}`, '')
+  // Working: reject past-due users.
 }
