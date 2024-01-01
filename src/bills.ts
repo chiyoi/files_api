@@ -1,29 +1,29 @@
 import { IRequest, json } from 'itty-router'
 import { Env } from '@/src'
 import { z } from 'zod'
-import { billingContract, walletClient } from '@/src/accounts'
 import { isHex } from 'viem'
 import { sepolia } from 'viem/chains'
+import { billingContract, walletClient } from '@/src/auth'
 
-const PRICE_WEI_PER_SECOND_BYTE = 0.02
+const PRICE_WEI_PER_SECOND_BYTE_DENO = 50n
 
 export async function handleGetCurrentPeriodBill(request: IRequest, env: Env) {
   const { params: { address } } = request
-  const usage = await checkUsage(address, env) ?? 0
-  return json({ amount: usage * PRICE_WEI_PER_SECOND_BYTE })
+  const usage = await addUsage(address, 0, env)
+  return json({ amount: String(usage / PRICE_WEI_PER_SECOND_BYTE_DENO) })
 }
 
 export async function handleGetPastDueBill(request: IRequest, env: Env) {
   const { params: { address } } = request
   const amount = await (await env.files.get(`${address}/bills/pass_due`))?.text()
-  return json({ amount: Number(amount) ?? 0 })
+  return json({ amount: amount ?? '0' })
 }
 
 export async function handlePastDuePaid(request: IRequest, env: Env) {
   const { params: { address } } = request
   const pastDue = await (await env.files.get(`${address}/bills/past_due`))?.text()
   if (pastDue === undefined) return
-  await charge(address, Number(pastDue), env)
+  await charge(address, BigInt(pastDue), env)
   await env.files.delete(`${address}/bills/past_due`)
   return
 }
@@ -36,7 +36,7 @@ export async function chargeAll(env: Env) {
     .forEach(async address => {
       const pastDue = await (await env.files.get(`${address}/bills/past_due`))?.text()
       if (pastDue !== undefined) {
-        try { await charge(address, Number(pastDue), env) }
+        try { await charge(address, BigInt(pastDue), env) }
         catch (error) {
           console.warn(error)
           return false
@@ -44,9 +44,9 @@ export async function chargeAll(env: Env) {
         return
       }
 
-      const usage = await checkUsage(address, env)
-      if (usage === undefined) return
-      const amount = usage * PRICE_WEI_PER_SECOND_BYTE
+      const usage = await addUsage(address, 0, env)
+      if (usage === 0n) return
+      const amount = usage / PRICE_WEI_PER_SECOND_BYTE_DENO
       try { await charge(address, amount, env) }
       catch (error) {
         console.warn(error)
@@ -55,32 +55,38 @@ export async function chargeAll(env: Env) {
     })
 }
 
-export async function charge(address: string, amount: number, env: Env) {
+export async function charge(address: string, amount: bigint, env: Env) {
   if (!isHex(address)) throw new Error('Address should be hex.')
   const [account, client] = walletClient(env)
   const contract = billingContract(client, env)
-  await contract.write.charge([address, BigInt(amount)], {
+  await contract.write.charge([address, amount], {
     account: account.address,
     chain: sepolia,
   })
 }
 
-export async function checkUsage(address: string, env: Env, newUsage?: number) {
+export async function addUsage(address: string, offset: number, env: Env) {
   const usage = await (await env.files.get(`${address}/bills/usage`))
-  if (usage === null) return
-  const { current, checked, timestamp } = Usage.parse(await usage.json())
-  const now = Date.now()
-  const newChecked = checked + current * (now - timestamp)
+  let { current, checked, timestamp } = Usage.parse(await usage?.json() ?? {
+    current: 0,
+    checked: '0',
+    timestamp: 0,
+  })
+  const now = Math.ceil(Date.now() / 1000)
+  if (current !== 0) {
+    checked += BigInt(current * (now - timestamp))
+  }
+  current += offset
   await env.files.put(`${address}/bills/usage`, JSON.stringify({
-    current: newUsage ?? current,
-    checked: newChecked,
+    current,
+    checked: String(checked),
     timestamp: now,
   }))
-  return newChecked
+  return checked
 }
 
 const Usage = z.object({
   current: z.number(),
-  checked: z.number(),
+  checked: z.coerce.bigint(),
   timestamp: z.number(),
 })

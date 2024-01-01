@@ -1,34 +1,10 @@
 import { IRequest, error, json } from 'itty-router'
 import { Env } from '@/src'
-import { isHex } from 'viem'
-import { z } from 'zod'
-
-export async function withNameResolved(request: IRequest, env: Env) {
-  const { params: { address: name } } = request
-  if (!isHex(name)) {
-    const response = await fetch(`${env.ENS_ENDPOINT}/${name}/address`)
-    if (!response.ok) {
-      if (response.status === 404) return error(400, 'Name not exist.')
-      console.warn(`Resolve name error: ${await response.text()}`)
-    }
-    request.params.address = await response.text()
-  }
-}
-
-export async function withKeyResolved(request: IRequest, _: Env) {
-  const { params: { address, filename } } = request
-  if (!isHex(address)) return error(400, 'Address should be like `0x${string}`')
-  request.params.address = address.toLowerCase()
-  if (filename !== undefined) {
-    request.params.filename = decodeURIComponent(filename)
-    request.params.key = [address, request.params.filename].join('/')
-  } else {
-    request.params.key = address
-  }
-}
+import { addUsage } from '@/src/bills'
 
 export async function handleListWithinKey(request: IRequest, env: Env) {
-  const { params: { address, key: prefix } } = request
+  const { params: { address, filename } } = request
+  const prefix = `${address}/files/${filename}`
   const list = await env.files.list({ prefix })
   const resolved = (await Promise.all(list.objects.map(async ({ key }) => {
     const cid = await (await env.files.get(key))?.text()
@@ -45,49 +21,25 @@ export async function handleGetFileFromCID(request: IRequest, env: Env) {
 }
 
 export async function handleDeleteKey(request: IRequest, env: Env) {
-  const { params: { key } } = request
+  const { params: { address, filename } } = request
+  const key = `${address}/files/${filename}`
+
+  const { objects: [info] } = await env.files.list({ prefix: key })
+  if (info === undefined) return error(500, 'Unexpected file not found.')
+
   await env.files.delete(key)
+  await addUsage(address, info.size, env)
   return json({ deleted: key })
 }
 
 export async function handlePutFileCID(request: IRequest, env: Env) {
-  const { params: { key, cid } } = request
+  const { params: { address, filename, cid } } = request
+  const key = `${address}/files/${filename}`
   await env.files.put(key, cid)
+
+  const { objects: [info] } = await env.files.list({ prefix: key })
+  if (info === undefined) return error(500, 'Unexpected file not found.')
+  await addUsage(address, info.size, env)
+
   return json({ put: key })
-}
-
-export async function handleGetFile(request: IRequest, env: Env) {
-  const { params: { key } } = request
-  const file = await env.files.get(key)
-  if (file === null) return error(404, 'File not exist.')
-  const headers = new Headers()
-  file.writeHttpMetadata(headers)
-  return new Response(file.body, { headers })
-}
-
-export async function handleStartUploadFile(request: IRequest, env: Env) {
-  const { params: { key } } = request
-  const upload = await env.files.createMultipartUpload(key)
-  return json({ uploadID: upload.uploadId })
-}
-
-export async function handleUploadFilePart(request: IRequest, env: Env) {
-  const { params: { key, upload_id, part } } = request
-  if (request.body === null) return error(400, 'Body should not be null.')
-  const upload = await env.files.resumeMultipartUpload(key, upload_id)
-  const uploaded = await upload.uploadPart(Number(part), request.body)
-  return json(uploaded)
-}
-
-export async function handleCompleteUploadFile(request: IRequest, env: Env) {
-  const { params: { key, upload_id } } = request
-  const parsed = z.object({
-    partNumber: z.number(),
-    etag: z.string(),
-  }).array().safeParse(await request.json())
-  if (!parsed.success) return error(400, 'Malformed request body.')
-
-  const upload = await env.files.resumeMultipartUpload(key, upload_id)
-  await upload.complete(parsed.data)
-  return json({ completed: key })
 }
