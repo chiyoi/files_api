@@ -20,7 +20,7 @@ export function walletClient(env: Env) {
   })] as const
 }
 
-export function billingContract(walletClient: WalletClient, env: Env) {
+export function billingContract(walletClient: WalletClient, env: EnvBillingContractAddress) {
   return getContract({
     address: env.BILLING_CONTRACT_ADDRESS,
     abi: BillingAccount,
@@ -28,7 +28,7 @@ export function billingContract(walletClient: WalletClient, env: Env) {
   })
 }
 
-export async function withAccountResolved(request: IRequest, env: Env) {
+export async function withPreprocessed(request: IRequest, env: Env) {
   const { params: { address: name } } = request
   if (!isHex(name)) {
     const response = await fetch(`${env.ENS_ENDPOINT}/${name}/address`)
@@ -60,10 +60,17 @@ export async function withAuth(request: IRequest, env: Env) {
   const message = atob(messageB64)
   if (!await publicClient.verifyMessage({ address, message, signature })) return error(403, 'Invalid signature.')
 
+  const code = await (await env.files.get(`${address}/communication_code`))?.text()
+  if (code !== undefined && !message.includes(code)) return error(403, 'Message should contain communication code.')
+
   const pastDue = await env.files.get(`${address}/bills/past_due`)
   if (pastDue !== null) return error(402, 'Account has past-due bill.')
 
   const usage = await addUsage(address, 0, env)
   if (usage === 0n && pastDue === null) await env.files.delete(`address/${address}`)
   else await env.files.put(`addresses/${address}`, '')
+}
+
+type EnvBillingContractAddress = {
+  BILLING_CONTRACT_ADDRESS: `0x${string}`,
 }

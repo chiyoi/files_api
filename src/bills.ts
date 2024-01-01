@@ -25,7 +25,6 @@ export async function handlePastDuePaid(request: IRequest, env: Env) {
   if (pastDue === undefined) return
   await charge(address, BigInt(pastDue), env)
   await env.files.delete(`${address}/bills/past_due`)
-  return
 }
 
 export async function chargeAll(env: Env) {
@@ -77,7 +76,8 @@ export async function addUsage(address: string, offset: number, env: Env) {
     checked += BigInt(current * (now - timestamp))
   }
   current += offset
-  await env.files.put(`${address}/bills/usage`, JSON.stringify({
+  if (current === 0 && checked === 0n) await env.files.delete(`${address}/bills/usage`)
+  else await env.files.put(`${address}/bills/usage`, JSON.stringify({
     current,
     checked: String(checked),
     timestamp: now,
