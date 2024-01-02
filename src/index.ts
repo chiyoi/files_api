@@ -1,7 +1,7 @@
 import { error, Router } from 'itty-router'
 import { withPreprocessed, withAuth } from '@/src/auth'
 import { handleListFiles, handleGetFileFromCID, handleDeleteFile, handlePutFileCID, withCIDFromFiles, withCIDFromPinning, withCIDUnpinned } from '@/src/files'
-import { handleGetCurrentPeriodBill, handleGetPastDueBill, handlePastDuePaid } from '@/src/bills'
+import { chargeAll, handleGetCurrentPeriodBill, handleGetPastDueBill, handlePastDuePaid } from '@/src/bills'
 import { handleGetCommunicationCode, handleSetCommunicationCode } from '@/src/communication_code'
 import { handleCompleteUploading, handleGetFileFromStorage, handleListLargeFiles, handleStartUploading, handleUploadPart } from '@/src/large'
 
@@ -9,8 +9,7 @@ export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => router()
     .handle(request, env, ctx)
     .catch(error),
-  scheduled: (event: Event, env: Env, ctx: ExecutionContext) => {
-  },
+  scheduled: (event: ScheduledEvent, env: Env, ctx: ExecutionContext) => chargeAll(env),
 }
 
 function router() {
