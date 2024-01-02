@@ -9,7 +9,8 @@ export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => router()
     .handle(request, env, ctx)
     .catch(error),
-  scheduled: (event: ScheduledEvent, env: Env, ctx: ExecutionContext) => chargeAll(env),
+  scheduled: (event: ScheduledEvent, env: Env, ctx: ExecutionContext) => chargeAll(env)
+    .catch(console.error),
 }
 
 function router() {
