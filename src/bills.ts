@@ -5,21 +5,21 @@ import { isHex } from 'viem'
 import { sepolia } from 'viem/chains'
 import { billingContract, walletClient } from '@/src/auth'
 
-const PRICE_WEI_PER_SECOND_BYTE_DENO = 50n
+const PRICE_WEI_PER_SECOND_BYTE_DENOMINATOR = 50n
 
-export async function handleGetCurrentPeriodBill(request: IRequest, env: Env) {
+export const handleGetCurrentPeriodBill = async (request: IRequest, env: Env) => {
   const { params: { address } } = request
   const usage = await addUsage(address, 0, env)
-  return json({ amount: String(usage / PRICE_WEI_PER_SECOND_BYTE_DENO) })
+  return json({ amount: String(usage / PRICE_WEI_PER_SECOND_BYTE_DENOMINATOR) })
 }
 
-export async function handleGetPastDueBill(request: IRequest, env: Env) {
+export const handleGetPastDueBill = async (request: IRequest, env: Env) => {
   const { params: { address } } = request
   const amount = await (await env.files.get(`${address}/bills/pass_due`))?.text()
   return json({ amount: amount ?? '0' })
 }
 
-export async function handlePastDuePaid(request: IRequest, env: Env) {
+export const handlePastDuePaid = async (request: IRequest, env: Env) => {
   const { params: { address } } = request
   const pastDue = await (await env.files.get(`${address}/bills/past_due`))?.text()
   if (pastDue === undefined) return
@@ -27,7 +27,7 @@ export async function handlePastDuePaid(request: IRequest, env: Env) {
   await env.files.delete(`${address}/bills/past_due`)
 }
 
-export async function chargeAll(env: Env) {
+export const chargeAll = async (env: Env) => {
   const prefix = 'addresses/'
   const addresses = await env.files.list({ prefix })
   addresses.objects
@@ -45,7 +45,7 @@ export async function chargeAll(env: Env) {
 
       const usage = await addUsage(address, 0, env)
       if (usage === 0n) return
-      const amount = usage / PRICE_WEI_PER_SECOND_BYTE_DENO
+      const amount = usage / PRICE_WEI_PER_SECOND_BYTE_DENOMINATOR
       try { await charge(address, amount, env) }
       catch (error) {
         console.warn(error)
@@ -54,7 +54,7 @@ export async function chargeAll(env: Env) {
     })
 }
 
-export async function charge(address: string, amount: bigint, env: Env) {
+export const charge = async (address: string, amount: bigint, env: Env) => {
   if (!isHex(address)) throw new Error('Address should be hex.')
   const [account, client] = walletClient(env)
   const contract = billingContract(client, env)
@@ -64,7 +64,7 @@ export async function charge(address: string, amount: bigint, env: Env) {
   })
 }
 
-export async function addUsage(address: string, offset: number, env: Env) {
+export const addUsage = async (address: string, offset: number, env: Env) => {
   const usage = await (await env.files.get(`${address}/bills/usage`))
   let { current, checked, timestamp } = Usage.parse(await usage?.json() ?? {
     current: 0,

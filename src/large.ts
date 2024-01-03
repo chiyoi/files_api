@@ -3,7 +3,7 @@ import { addUsage } from '@/src/bills'
 import { IRequest, error, json } from 'itty-router'
 import { z } from 'zod'
 
-export async function handleListLargeFiles(request: IRequest, env: Env) {
+export const handleListLargeFiles = async (request: IRequest, env: Env) => {
   const { params: { address } } = request
   const prefix = `${address}/large_files/`
   const list = await env.files.list({ prefix })
@@ -14,7 +14,7 @@ export async function handleListLargeFiles(request: IRequest, env: Env) {
   return json(resolved)
 }
 
-export async function handleGetFileFromStorage(request: IRequest, env: Env) {
+export const handleGetFileFromStorage = async (request: IRequest, env: Env) => {
   const { params: { address, filename } } = request
   const key = `${address}/large_files/${filename}`
   const file = await env.files.get(key)
@@ -24,7 +24,7 @@ export async function handleGetFileFromStorage(request: IRequest, env: Env) {
   return new Response(file.body, { headers })
 }
 
-export async function handleStartUploading(request: IRequest, env: Env) {
+export const handleStartUploading = async (request: IRequest, env: Env) => {
   const { params: { address, filename } } = request
   const key = `${address}/large_files/${filename}`
   const { objects: [info] } = await env.files.list({ prefix: key })
@@ -36,7 +36,7 @@ export async function handleStartUploading(request: IRequest, env: Env) {
   return json({ upload_id: upload.uploadId })
 }
 
-export async function handleUploadPart(request: IRequest, env: Env) {
+export const handleUploadPart = async (request: IRequest, env: Env) => {
   const { params: { address, filename, upload_id, part } } = request
   if (request.body === null) return error(400, 'Body should not be null.')
   const upload = await env.files.resumeMultipartUpload(`${address}/large_files/${filename}`, upload_id)
@@ -44,7 +44,7 @@ export async function handleUploadPart(request: IRequest, env: Env) {
   return json(uploaded)
 }
 
-export async function handleCompleteUploading(request: IRequest, env: Env) {
+export const handleCompleteUploading = async (request: IRequest, env: Env) => {
   const { params: { address, filename, upload_id } } = request
   const parsed = z.object({
     partNumber: z.number(),

@@ -13,7 +13,7 @@ export default {
     .catch(console.error),
 }
 
-function router() {
+const router = () => {
   const router = Router()
   router.all('/ping', () => new Response('Pong!\n'))
 

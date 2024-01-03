@@ -11,7 +11,7 @@ export const publicClient = createPublicClient({
   transport: http(),
 })
 
-export function walletClient(env: Env) {
+export const walletClient = (env: Env) => {
   const account = privateKeyToAccount(env.BILLING_OWNER_PRIVATE_KEY)
   return [account, createWalletClient({
     account,
@@ -20,7 +20,7 @@ export function walletClient(env: Env) {
   })] as const
 }
 
-export function billingContract(walletClient: WalletClient, env: EnvBillingContractAddress) {
+export const billingContract = (walletClient: WalletClient, env: EnvBillingContractAddress) => {
   return getContract({
     address: env.BILLING_CONTRACT_ADDRESS,
     abi: BillingAccount,
@@ -28,7 +28,7 @@ export function billingContract(walletClient: WalletClient, env: EnvBillingContr
   })
 }
 
-export async function withPreprocessed(request: IRequest, env: Env) {
+export const withPreprocessed = async (request: IRequest, env: Env) => {
   const { params: { address: name } } = request
   if (!isHex(name)) {
     const response = await fetch(`${env.ENS_ENDPOINT}/${name}/address`)
@@ -47,7 +47,7 @@ export async function withPreprocessed(request: IRequest, env: Env) {
   }
 }
 
-export async function withAuth(request: IRequest, env: Env) {
+export const withAuth = async (request: IRequest, env: Env) => {
   const { params: { address } } = request
   if (!isHex(address)) return error(400, 'Invalid address.')
 
