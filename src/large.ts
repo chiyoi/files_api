@@ -1,16 +1,18 @@
-import { Env } from '@/src'
 import { addUsage } from '@/src/bills'
-import { IRequest, error, json } from 'itty-router'
+import { IRequest, json } from 'itty-router'
 import { z } from 'zod'
+import { Env } from '@/src'
+import { error } from '@/src/helpers'
 
 export const handleListLargeFiles = async (request: IRequest, env: Env) => {
   const { params: { address } } = request
   const prefix = `${address}/large_files/`
   const list = await env.files.list({ prefix })
-  const resolved = (await Promise.all(list.objects.map(async ({ key, size, uploaded }) => {
-    const filename = key.slice(prefix.length)
-    return { filename, size, uploaded }
-  })))
+  const resolved = list.objects.map(({ key, size, uploaded }) => ({
+    filename: key.slice(prefix.length),
+    size,
+    uploaded,
+  }))
   return json(resolved)
 }
 
@@ -61,4 +63,16 @@ export const handleCompleteUploading = async (request: IRequest, env: Env) => {
   await addUsage(address, info.size, env)
 
   return json({ completed: key })
+}
+
+export const handleDeleteLargeFile = async (request: IRequest, env: Env) => {
+  const { params: { address, filename } } = request
+  const key = `${address}/large_files/${filename}`
+
+  const { objects: [info] } = await env.files.list({ prefix: key })
+  if (info === undefined) return error(500, 'Unexpected file not found.')
+
+  await env.files.delete(key)
+  await addUsage(address, -info.size, env)
+  return json({ deleted: key })
 }

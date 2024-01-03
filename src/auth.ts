@@ -1,32 +1,8 @@
 import { IRequest, error } from 'itty-router'
-import { createPublicClient, createWalletClient, getContract, http, isHex, WalletClient } from 'viem'
-import { privateKeyToAccount } from 'viem/accounts'
-import { sepolia } from 'viem/chains'
-import BillingAccount from '@/abi/BillingAccount'
+import { isHex } from 'viem'
 import { Env } from '@/src'
 import { addUsage } from '@/src/bills'
-
-export const publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http(),
-})
-
-export const walletClient = (env: Env) => {
-  const account = privateKeyToAccount(env.BILLING_OWNER_PRIVATE_KEY)
-  return [account, createWalletClient({
-    account,
-    chain: sepolia,
-    transport: http(),
-  })] as const
-}
-
-export const billingContract = (walletClient: WalletClient, env: EnvBillingContractAddress) => {
-  return getContract({
-    address: env.BILLING_CONTRACT_ADDRESS,
-    abi: BillingAccount,
-    walletClient,
-  })
-}
+import { publicClient } from '@/src/helpers'
 
 export const withPreprocessed = async (request: IRequest, env: Env) => {
   const { params: { address: name } } = request
@@ -40,7 +16,7 @@ export const withPreprocessed = async (request: IRequest, env: Env) => {
   }
 
   const { params: { address, filename } } = request
-  if (!isHex(address)) return error(400, 'Address should be like `0x${string}`')
+  if (!isHex(address)) return error(400, 'Address should be hex.')
   request.params.address = address.toLowerCase()
   if (filename !== undefined) {
     request.params.filename = decodeURIComponent(filename)
@@ -69,8 +45,4 @@ export const withAuth = async (request: IRequest, env: Env) => {
   const usage = await addUsage(address, 0, env)
   if (usage === 0n && pastDue === null) await env.files.delete(`address/${address}`)
   else await env.files.put(`addresses/${address}`, '')
-}
-
-type EnvBillingContractAddress = {
-  BILLING_CONTRACT_ADDRESS: `0x${string}`,
 }

@@ -3,7 +3,7 @@ import { Env } from '@/src'
 import { z } from 'zod'
 import { isHex } from 'viem'
 import { sepolia } from 'viem/chains'
-import { billingContract, walletClient } from '@/src/auth'
+import { billingContract, walletClient } from '@/src/helpers'
 
 const PRICE_WEI_PER_SECOND_BYTE_DENOMINATOR = 50n
 
@@ -25,6 +25,7 @@ export const handlePastDuePaid = async (request: IRequest, env: Env) => {
   if (pastDue === undefined) return
   await charge(address, BigInt(pastDue), env)
   await env.files.delete(`${address}/bills/past_due`)
+  return json({ paid: { amount: pastDue } })
 }
 
 export const chargeAll = async (env: Env) => {

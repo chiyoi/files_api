@@ -1,9 +1,11 @@
-import { error, Router } from 'itty-router'
+import { Router } from 'itty-router'
 import { withPreprocessed, withAuth } from '@/src/auth'
-import { handleListFiles, handleGetFileFromCID, handleDeleteFile, handlePutFileCID, withCIDFromFiles, withCIDFromPinning, withCIDUnpinned } from '@/src/files'
+import { handleListFiles, handleGetFile, handleDeleteFile, handlePutFile } from '@/src/files'
 import { chargeAll, handleGetCurrentPeriodBill, handleGetPastDueBill, handlePastDuePaid } from '@/src/bills'
 import { handleGetCommunicationCode, handleSetCommunicationCode } from '@/src/communication_code'
-import { handleCompleteUploading, handleGetFileFromStorage, handleListLargeFiles, handleStartUploading, handleUploadPart } from '@/src/large'
+import { handleCompleteUploading, handleDeleteLargeFile, handleGetFileFromStorage, handleListLargeFiles, handleStartUploading, handleUploadPart } from '@/src/large'
+import { error } from '@/src/helpers'
+
 
 export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => router()
@@ -18,9 +20,9 @@ const router = () => {
   router.all('/ping', () => new Response('Pong!\n'))
 
   router.get('/api/:address/files', withPreprocessed, handleListFiles)
-  router.get('/api/:address/files/:filename', withPreprocessed, withCIDFromFiles, handleGetFileFromCID)
-  router.put('/api/:address/files/:filename', withPreprocessed, withAuth, withCIDFromPinning, handlePutFileCID)
-  router.delete('/api/:address/files/:filename', withPreprocessed, withAuth, withCIDFromFiles, withCIDUnpinned, handleDeleteFile('files'))
+  router.get('/api/:address/files/:filename', withPreprocessed, handleGetFile)
+  router.put('/api/:address/files/:filename', withPreprocessed, withAuth, handlePutFile)
+  router.delete('/api/:address/files/:filename', withPreprocessed, withAuth, handleDeleteFile)
 
   router.get('/api/:address/bills/current_period', withPreprocessed, withAuth, handleGetCurrentPeriodBill)
   router.get('/api/:address/bills/past_due', withPreprocessed, withAuth, handleGetPastDueBill)
@@ -31,7 +33,7 @@ const router = () => {
   router.post('/api/:address/large_files/:filename/uploads', withPreprocessed, withAuth, handleStartUploading)
   router.put('/api/:address/large_files/:filename/uploads/:upload_id/parts/:part', withPreprocessed, withAuth, handleUploadPart)
   router.post('/api/:address/large_files/:filename/uploads/:upload_id/complete', withPreprocessed, withAuth, handleCompleteUploading)
-  router.delete('/api/:address/large_files/:filename', withPreprocessed, withAuth, handleDeleteFile('large_files'))
+  router.delete('/api/:address/large_files/:filename', withPreprocessed, withAuth, handleDeleteLargeFile)
 
   router.get('/api/:address/communication_code', withPreprocessed, handleGetCommunicationCode)
   router.put('/api/:address/communication_code', withPreprocessed, withAuth, handleSetCommunicationCode)

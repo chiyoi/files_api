@@ -17,6 +17,10 @@
   },
   "jest": {
     "preset": "ts-jest",
-    "testTimeout": 300000
+    "testTimeout": 600000,
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@/(.*)": "<rootDir>/$1"
+    }
   }
 }

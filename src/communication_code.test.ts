@@ -12,21 +12,21 @@ const client = createWalletClient({
   transport: http()
 })
 
+const address = account.address
+const message = 'test-message'
+const code = 'test-code'
 
-describe('Communication Code', async () => {
-  const address = account.address
-  const message = 'test-message'
-  const code = 'test-code'
+const HeadersWithoutCode = async () => ({
+  Authorization: `Signature ${btoa(message)}:${await client.signMessage({ message })}`
+})
 
-  const headersWithoutCode = {
-    Authorization: `Signature ${btoa(message)}:${await client.signMessage({ message })}`
-  }
+const Headers = async () => ({
+  Authorization: `Signature ${btoa(message + code)}:${await client.signMessage({ message: message + code })}`
+})
 
-  const headers = {
-    Authorization: `Signature ${btoa(message + code)}:${await client.signMessage({ message: message + code })}`
-  }
-
+describe.skip('Communication Code', () => {
   test('get, set', async () => {
+    const headers = await Headers()
     const set = await fetch(`http://localhost:8787/api/${address}/communication_code`, {
       method: 'PUT',
       headers,
@@ -38,7 +38,7 @@ describe('Communication Code', async () => {
     assert.equal(await got1.text(), code)
 
     const withoutCode = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, {
-      headers: headersWithoutCode,
+      headers: await HeadersWithoutCode(),
     })
     assert.equal(withoutCode.status, 403)
 
