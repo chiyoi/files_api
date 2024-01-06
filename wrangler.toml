@@ -6,7 +6,6 @@ compatibility_date = "2023-11-21"
 BILLING_CONTRACT_ADDRESS = "0x377e2782Fc6284C3c085c32EF0fAe1471CB10416"
 ENS_ENDPOINT = "https://ens.neko03.workers.dev/ens"
 IPFS_GATEWAY_ENDPOINT = "https://cf-ipfs.com"
-PINATA_ENDPOINT = "https://api.pinata.cloud"
 
 [[r2_buckets]]
 binding = "files"
@@ -15,3 +14,6 @@ bucket_name = "files"
 [[routes]]
 pattern = "files.neko03.moe/api/*"
 zone_name = "neko03.moe"
+
+[triggers]
+crons = ["0 0 1 * *"]

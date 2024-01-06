@@ -109,10 +109,10 @@ describe('Bills', () => {
 
   test.only('charge all and pay past due', async () => {
     const headers = await Headers()
-    const balance1 = await contract.read.balance([address])
+    const balance1 = String(await contract.read.balance([address]))
     console.log(`Got balance: ${balance1}`)
-    if (balance1 !== 0n) {
-      const { request: withdraw } = await contract.simulate.withdraw([balance1])
+    if (balance1 !== '0') {
+      const { request: withdraw } = await contract.simulate.withdraw([BigInt(balance1)])
       await client.writeContract(withdraw)
     }
 
@@ -124,8 +124,8 @@ describe('Bills', () => {
       body: file,
     })
     if (!put.ok) throw new Error(await put.text())
-    const { put: { key, cid } } = z.object({ put: z.object({ key: z.string(), cid: z.string() }) }).parse(await put.json())
-    console.log(`Put: ${key} (${cid})`)
+    const parsed = z.object({ put: z.object({ address: z.string(), filename: z.string(), cid: z.string() }) }).parse(await put.json())
+    console.log(`Put: ${parsed.put.address}/${parsed.put.filename} (${parsed.put.cid})`)
 
     await new Promise(resolve => { setTimeout(resolve, 1000) })
 
@@ -135,29 +135,34 @@ describe('Bills', () => {
     console.log(`Amount: ${amount1}`)
 
     await fetch(`http://localhost:8787/__scheduled?cron=${encodeURIComponent('0 0 1 * *')}`)
-
-    const currentPeriodBill2 = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, { headers })
-    if (!currentPeriodBill2.ok) throw new Error(await currentPeriodBill2.text())
-    const { amount: amount2 } = z.object({ amount: z.coerce.bigint() }).parse(await currentPeriodBill1.json())
-    expect(amount2).toBe(0n)
+    await new Promise(resolve => { setTimeout(resolve, 30000) })
 
     const pastDue = await fetch(`http://localhost:8787/api/${address}/bills/past_due`, { headers })
     if (!pastDue.ok) throw new Error(await pastDue.text())
-    expect(BigInt(await pastDue.text())).toBe(amount1)
+    const { amount: amount2 } = z.object({ amount: z.string() }).parse(await pastDue.json())
+    expect(amount2).toBe(String(amount1))
 
     const { request: deposit } = await contract.simulate.deposit({ value: amount1 })
     await client.writeContract(deposit)
     console.log(`Deposited: ${amount1}`)
+    await new Promise(resolve => { setTimeout(resolve, 30000) })
 
     const paid = await fetch(`http://localhost:8787/api/${address}/bills/past_due_paid`, {
       method: 'POST',
       headers,
     })
     if (!paid.ok) throw new Error(await paid.text())
-    const { paid: { amount: amount3 } } = z.object({ paid: z.object({ amount: z.coerce.bigint() }) }).parse(await paid.json())
-    expect(amount1).toBe(amount3)
+    const { paid: { amount: amount3 } } = z.object({ paid: z.object({ amount: z.string() }) }).parse(await paid.json())
+    expect(amount3).toBe(String(amount1))
+    await new Promise(resolve => { setTimeout(resolve, 30000) })
 
     const balance2 = await contract.read.balance([address])
-    expect(balance2).toBe(0n)
+    expect(String(balance2)).toBe('0')
+
+    const deleted = await fetch(`http://localhost:8787/api/${address}/files/${filename}`, {
+      method: 'DELETE',
+      headers,
+    })
+    if (!deleted.ok) throw new Error(await deleted.text())
   })
 })

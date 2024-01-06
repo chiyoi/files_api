@@ -24,9 +24,9 @@ const router = () => {
   router.put('/api/:address/files/:filename', withPreprocessed, withAuth, handlePutFile)
   router.delete('/api/:address/files/:filename', withPreprocessed, withAuth, handleDeleteFile)
 
-  router.get('/api/:address/bills/current_period', withPreprocessed, withAuth, handleGetCurrentPeriodBill)
-  router.get('/api/:address/bills/past_due', withPreprocessed, withAuth, handleGetPastDueBill)
-  router.post('/api/:address/bills/past_due_paid', withPreprocessed, withAuth, handlePastDuePaid)
+  router.get('/api/:address/bills/current_period', withPreprocessed, handleGetCurrentPeriodBill)
+  router.get('/api/:address/bills/past_due', withPreprocessed, handleGetPastDueBill)
+  router.post('/api/:address/bills/past_due_paid', withPreprocessed, handlePastDuePaid)
 
   router.get('/api/:address/large_files', withPreprocessed, handleListLargeFiles)
   router.get('/api/:address/large_files/:filename', withPreprocessed, handleGetFileFromStorage)
@@ -47,7 +47,6 @@ export type Env = {
   BILLING_OWNER_PRIVATE_KEY: `0x${string}`,
   ENS_ENDPOINT: string,
   IPFS_GATEWAY_ENDPOINT: string,
-  PINATA_ENDPOINT: string,
   PINATA_JWT_KEY: string,
 
   files: R2Bucket,

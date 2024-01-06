@@ -1,7 +1,7 @@
 import { IRequest, error } from 'itty-router'
 import { isHex } from 'viem'
 import { Env } from '@/src'
-import { addUsage } from '@/src/bills'
+import { checkUsage } from '@/src/bills'
 import { publicClient } from '@/src/internal'
 
 export const withPreprocessed = async (request: IRequest, env: Env) => {
@@ -42,7 +42,6 @@ export const withAuth = async (request: IRequest, env: Env) => {
   const pastDue = await env.files.get(`${address}/bills/past_due`)
   if (pastDue !== null) return error(402, 'Account has past-due bill.')
 
-  const usage = await addUsage(address, 0, env)
-  if (usage === 0n && pastDue === null) await env.files.delete(`address/${address}`)
-  else await env.files.put(`addresses/${address}`, '')
+  const usage = await checkUsage(address, env)
+  await env.files.put(`addresses/${address}`, '')
 }

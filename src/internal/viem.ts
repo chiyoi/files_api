@@ -10,11 +10,11 @@ export const publicClient = createPublicClient({
 
 export const walletClient = (env: EnvBillingOwnerPrivateKey) => {
   const account = privateKeyToAccount(env.BILLING_OWNER_PRIVATE_KEY)
-  return [account, createWalletClient({
+  return createWalletClient({
     account,
     chain: sepolia,
     transport: http(),
-  })] as const
+  })
 }
 
 export const billingContract = (walletClient: WalletClient, env: EnvBillingContractAddress) => getContract({

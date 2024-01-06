@@ -1,4 +1,4 @@
-import { addUsage } from '@/src/bills'
+import { checkUsage } from '@/src/bills'
 import { IRequest, json } from 'itty-router'
 import { z } from 'zod'
 import { Env } from '@/src'
@@ -32,7 +32,7 @@ export const handleStartUploading = async (request: IRequest, env: Env) => {
   const { objects: [info] } = await env.files.list({ prefix: key })
   if (info !== undefined) {
     await env.files.delete(key)
-    await addUsage(address, -info.size, env)
+    await checkUsage(address, env, -info.size)
   }
   const upload = await env.files.createMultipartUpload(key)
   return json({ upload_id: upload.uploadId })
@@ -60,7 +60,7 @@ export const handleCompleteUploading = async (request: IRequest, env: Env) => {
 
   const { objects: [info] } = await env.files.list({ prefix: key })
   if (info === undefined) return error(500, 'Unexpected file not found.')
-  await addUsage(address, info.size, env)
+  await checkUsage(address, env, info.size)
 
   return json({ completed: { key } })
 }
@@ -73,6 +73,6 @@ export const handleDeleteLargeFile = async (request: IRequest, env: Env) => {
   if (info === undefined) return error(500, 'Unexpected file not found.')
 
   await env.files.delete(key)
-  await addUsage(address, -info.size, env)
+  await checkUsage(address, env, -info.size)
   return json({ deleted: { key } })
 }

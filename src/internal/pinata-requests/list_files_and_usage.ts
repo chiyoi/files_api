@@ -13,7 +13,6 @@ export const listFiles = async (env: EnvPinataJWTKey, query?: QueryListFiles) =>
       id: z.string(),
       ipfs_pin_hash: z.string(),
       size: z.number(),
-      metadata: z.record(z.string()),
     }).array()
   }).parse(await response.json())
   return rows

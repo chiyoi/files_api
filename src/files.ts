@@ -1,7 +1,6 @@
 import { IRequest, json } from 'itty-router'
-import { z } from 'zod'
 import { Env } from '@/src'
-import { addUsage } from '@/src/bills'
+import { checkUsage } from '@/src/bills'
 import { error } from '@/src/internal'
 import { listFiles, pinFileToIPFS, unpinFile } from '@/src/internal/pinata-requests'
 import { isHex } from 'viem'
@@ -32,7 +31,7 @@ export const handlePutFile = async (request: IRequest, env: Env) => {
   if (!isHex(address)) return error(400, 'Address should be hex.')
   await deleteFile(address, filename, env)
   const { cid, size } = await pinFileToIPFS(await request.blob(), env)
-  await addUsage(address, size, env)
+  await checkUsage(address, env, size)
   await increaseReferenceCounter(cid, env)
   await env.files.put(key, cid)
   return json({ put: { address, filename, cid } })
@@ -55,7 +54,7 @@ const deleteFile = async (address: `0x${string}`, filename: string, env: Env) =>
   const [info] = await listFiles(env, { hashContains: cid, status: 'pinned' })
   if (info === undefined) throw new Error(`Unexpected missing file info.`)
   await env.files.delete(key)
-  await addUsage(address, -info.size, env)
+  await checkUsage(address, env, -info.size)
   await decreaseReferenceCounter(cid, env)
   return true
 }
