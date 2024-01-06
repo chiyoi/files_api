@@ -1,6 +1,7 @@
 name = "files_api"
 main = "src/index.ts"
 compatibility_date = "2023-11-21"
+workers_dev = true
 
 [vars]
 BILLING_CONTRACT_ADDRESS = "0x377e2782Fc6284C3c085c32EF0fAe1471CB10416"
