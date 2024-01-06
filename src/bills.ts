@@ -3,7 +3,7 @@ import { Env } from '@/src'
 import { z } from 'zod'
 import { isHex } from 'viem'
 import { sepolia } from 'viem/chains'
-import { billingContract, walletClient } from '@/src/helpers'
+import { billingContract, walletClient } from '@/src/internal'
 
 const PRICE_WEI_PER_SECOND_BYTE_DENOMINATOR = 50n
 

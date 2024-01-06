@@ -2,7 +2,7 @@ import { addUsage } from '@/src/bills'
 import { IRequest, json } from 'itty-router'
 import { z } from 'zod'
 import { Env } from '@/src'
-import { error } from '@/src/helpers'
+import { error } from '@/src/internal'
 
 export const handleListLargeFiles = async (request: IRequest, env: Env) => {
   const { params: { address } } = request

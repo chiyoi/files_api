@@ -4,7 +4,7 @@ import { handleListFiles, handleGetFile, handleDeleteFile, handlePutFile } from 
 import { chargeAll, handleGetCurrentPeriodBill, handleGetPastDueBill, handlePastDuePaid } from '@/src/bills'
 import { handleGetCommunicationCode, handleSetCommunicationCode } from '@/src/communication_code'
 import { handleCompleteUploading, handleDeleteLargeFile, handleGetFileFromStorage, handleListLargeFiles, handleStartUploading, handleUploadPart } from '@/src/large'
-import { error } from '@/src/helpers'
+import { error } from '@/src/internal'
 
 
 export default {

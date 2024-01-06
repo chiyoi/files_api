@@ -3,7 +3,7 @@ import { createWalletClient, http } from 'viem'
 import { mnemonicToAccount } from 'viem/accounts'
 import { sepolia } from 'viem/chains'
 import { z } from 'zod'
-import { billingContract } from '@/src/helpers'
+import { billingContract } from '@/src/internal'
 
 const account = mnemonicToAccount('slight type universe copper sing flash gospel bubble mix angle stumble social')
 
@@ -117,7 +117,7 @@ describe('Bills', () => {
     }
 
     const filename = 'nyan'
-    const file = Array(1000).fill('a').join('')
+    const file = Array(1024).fill('a').join('')
     const put = await fetch(`http://localhost:8787/api/${address}/files/${filename}`, {
       method: 'PUT',
       headers,
@@ -127,7 +127,7 @@ describe('Bills', () => {
     const { put: { key, cid } } = z.object({ put: z.object({ key: z.string(), cid: z.string() }) }).parse(await put.json())
     console.log(`Put: ${key} (${cid})`)
 
-    await new Promise(resolve => { setTimeout(resolve, 3000) })
+    await new Promise(resolve => { setTimeout(resolve, 1000) })
 
     const currentPeriodBill1 = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, { headers })
     if (!currentPeriodBill1.ok) throw new Error(await currentPeriodBill1.text())
@@ -137,7 +137,7 @@ describe('Bills', () => {
     await fetch(`http://localhost:8787/__scheduled?cron=${encodeURIComponent('0 0 1 * *')}`)
 
     const currentPeriodBill2 = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, { headers })
-    if (!currentPeriodBill2.ok) throw new Error(await currentPeriodBill1.text())
+    if (!currentPeriodBill2.ok) throw new Error(await currentPeriodBill2.text())
     const { amount: amount2 } = z.object({ amount: z.coerce.bigint() }).parse(await currentPeriodBill1.json())
     expect(amount2).toBe(0n)
 

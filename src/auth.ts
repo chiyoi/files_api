@@ -2,7 +2,7 @@ import { IRequest, error } from 'itty-router'
 import { isHex } from 'viem'
 import { Env } from '@/src'
 import { addUsage } from '@/src/bills'
-import { publicClient } from '@/src/helpers'
+import { publicClient } from '@/src/internal'
 
 export const withPreprocessed = async (request: IRequest, env: Env) => {
   const { params: { address: name } } = request
