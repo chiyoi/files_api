@@ -62,7 +62,7 @@ export const handleCompleteUploading = async (request: IRequest, env: Env) => {
   if (info === undefined) return error(500, 'Unexpected file not found.')
   await addUsage(address, info.size, env)
 
-  return json({ completed: key })
+  return json({ completed: { key } })
 }
 
 export const handleDeleteLargeFile = async (request: IRequest, env: Env) => {
@@ -74,5 +74,5 @@ export const handleDeleteLargeFile = async (request: IRequest, env: Env) => {
 
   await env.files.delete(key)
   await addUsage(address, -info.size, env)
-  return json({ deleted: key })
+  return json({ deleted: { key } })
 }

@@ -49,14 +49,6 @@ export const handlePutFile = async (request: IRequest, env: Env) => {
 
   const key = `${address}/files/${filename}`
   await env.files.put(key, cid)
-
-  const { objects: [info] } = await env.files.list({ prefix: key })
-  if (info === undefined) {
-    console.error(`Unexpected file not found. key: ${key}`)
-    return error(500, 'Unexpected file not found.')
-  }
-  await addUsage(address, info.size, env)
-
   return json({ put: { key, cid } })
 }
 
@@ -64,26 +56,23 @@ export const handleDeleteFile = async (request: IRequest, env: Env) => {
   const { params: { address, filename } } = request
   const key = `${address}/files/${filename}`
   const cid = await (await env.files.get(key))?.text()
-  // Working: testing here.
   if (cid === undefined) {
     console.warn(`File not found. key: ${key}`)
     return json({ file_not_found: { address, filename } })
   }
   request.params.cid = cid
 
-  const fileInfo = await fetch(`${env.PINATA_ENDPOINT}/data/pinList?hashContains=${cid}`, {
+  const fileInfo = await (await fetch(`${env.PINATA_ENDPOINT}/data/pinList?hashContains=${cid}&status=pinned`, {
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${env.PINATA_JWT_KEY}`,
     }
-  })
-  const parsed = z.object({
+  }))?.json()
+  const { rows: [{ size }] } = z.object({
     rows: z.object({
       size: z.number(),
-    }).array().min(1).max(1)
-  }).safeParse(await fileInfo.json())
-  if (!parsed.success) return error(404, 'File not found.')
-  const { rows: [{ size }] } = parsed.data
+    }).array().min(1)
+  }).parse(fileInfo)
 
   const fileUnpinned = await fetch(`${env.PINATA_ENDPOINT}/pinning/unpin/${cid}`, {
     method: 'DELETE',

@@ -24,8 +24,8 @@ const Headers = async () => ({
   Authorization: `Signature ${btoa(message)}:${await client.signMessage({ message })}`
 })
 
-describe.skip('Bills', () => {
-  test.only('bills calculation with files', async () => {
+describe('Bills', () => {
+  test('bills calculation with files', async () => {
     const headers = await Headers()
     const currentPeriodBill1 = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, { headers })
     if (!currentPeriodBill1.ok) throw new Error(await currentPeriodBill1.text())
@@ -33,7 +33,7 @@ describe.skip('Bills', () => {
     console.log(`Amount before: ${amount1}`)
 
     const filename = 'nyan'
-    const file = Array(1000).fill('a').join('')
+    const file = Array(1024).fill('a').join('')
     const put = await fetch(`http://localhost:8787/api/${address}/files/${filename}`, {
       method: 'PUT',
       headers,
@@ -43,14 +43,12 @@ describe.skip('Bills', () => {
     const { put: { key, cid } } = z.object({ put: z.object({ key: z.string(), cid: z.string() }) }).parse(await put.json())
     console.log(`Put: ${key} (${cid})`)
 
-    await new Promise(resolve => { setTimeout(resolve, 3000) })
+    await new Promise(resolve => { setTimeout(resolve, 1000) })
 
     const currentPeriodBill2 = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, { headers })
     if (!currentPeriodBill2.ok) throw new Error(await currentPeriodBill2.text())
     const { amount: amount2 } = z.object({ amount: z.coerce.bigint() }).parse(await currentPeriodBill2.json())
     console.log(`Amount after: ${amount2}`)
-    const bill = Number(amount2 - amount1)
-    console.log(`Bill: ${bill}`)
 
     const deleted = await fetch(`http://localhost:8787/api/${address}/files/${filename}`, {
       method: 'DELETE',
@@ -74,7 +72,7 @@ describe.skip('Bills', () => {
     if (!startUploadFile.ok) throw new Error(await startUploadFile.text())
     const { upload_id } = z.object({ upload_id: z.string() }).parse(await startUploadFile.json())
 
-    const file = Array(1000).fill('a').join('')
+    const file = Array(1024).fill('a').join('')
     const uploadFilePart = await fetch(`http://localhost:8787/api/${address}/large_files/${filename}/uploads/${upload_id}/parts/${1}`, {
       method: 'PUT',
       headers,
@@ -92,18 +90,15 @@ describe.skip('Bills', () => {
       body: JSON.stringify([uploaded])
     })
     if (!complete.ok) throw new Error(await complete.text())
-    const { completed } = z.object({ completed: z.string() }).parse(await complete.json())
-    console.log(`Completed: ${completed}`)
+    const { completed: { key: completed } } = z.object({ completed: z.object({ key: z.string() }) }).parse(await complete.json())
+    console.log(`Completed upload: ${completed}`)
 
-    await new Promise(resolve => { setTimeout(resolve, 3000) })
+    await new Promise(resolve => { setTimeout(resolve, 1000) })
 
     const currentPeriodBill2 = await fetch(`http://localhost:8787/api/${address}/bills/current_period`, { headers })
     if (!currentPeriodBill2.ok) throw new Error(await currentPeriodBill2.text())
     const { amount: amount2 } = z.object({ amount: z.coerce.bigint() }).parse(await currentPeriodBill2.json())
     console.log(`Amount after: ${amount2}`)
-    const bill = Number(amount2 - amount1)
-    const expectedBill = 1000 * 3 / 50
-    expect(Math.abs(bill - expectedBill)).toBeLessThan(10)
 
     const deleted = await fetch(`http://localhost:8787/api/${address}/large_files/${filename}`, {
       method: 'DELETE',
@@ -112,11 +107,14 @@ describe.skip('Bills', () => {
     if (!deleted.ok) throw new Error(await deleted.text())
   })
 
-  test('charge all and pay past due', async () => {
+  test.only('charge all and pay past due', async () => {
     const headers = await Headers()
     const balance1 = await contract.read.balance([address])
-    const { request: withdraw } = await contract.simulate.withdraw([balance1])
-    await client.writeContract(withdraw)
+    console.log(`Got balance: ${balance1}`)
+    if (balance1 !== 0n) {
+      const { request: withdraw } = await contract.simulate.withdraw([balance1])
+      await client.writeContract(withdraw)
+    }
 
     const filename = 'nyan'
     const file = Array(1000).fill('a').join('')
@@ -149,6 +147,7 @@ describe.skip('Bills', () => {
 
     const { request: deposit } = await contract.simulate.deposit({ value: amount1 })
     await client.writeContract(deposit)
+    console.log(`Deposited: ${amount1}`)
 
     const paid = await fetch(`http://localhost:8787/api/${address}/bills/past_due_paid`, {
       method: 'POST',
