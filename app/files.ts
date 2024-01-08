@@ -1,8 +1,8 @@
 import { IRequest, json } from 'itty-router'
-import { Env } from '@/src'
-import { checkUsage } from '@/src/bills'
-import { error } from '@/src/internal'
-import { listFiles, pinFileToIPFS, unpinFile } from '@/src/internal/pinata-requests'
+import { Env } from '@/app'
+import { checkUsage } from '@/app/bills'
+import { error } from '@/app/internal'
+import { listFiles, pinFileToIPFS, unpinFile } from '@/app/internal/pinata-requests'
 import { isHex } from 'viem'
 
 export const handleListFiles = async (request: IRequest, env: Env) => {

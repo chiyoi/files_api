@@ -1,8 +1,8 @@
 import { IRequest, json } from 'itty-router'
-import { Env } from '@/src'
+import { Env } from '@/app'
 import { z } from 'zod'
 import { isHex } from 'viem'
-import { billingContract, error, walletClient } from '@/src/internal'
+import { billingContract, error, walletClient } from '@/app/internal'
 
 const PRICE_WEI_PER_SECOND_BYTE_DENOMINATOR = 50n
 

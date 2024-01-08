@@ -1,10 +1,10 @@
 import { Router } from 'itty-router'
-import { withPreprocessed, withAuth } from '@/src/auth'
-import { handleListFiles, handleGetFile, handleDeleteFile, handlePutFile } from '@/src/files'
-import { chargeAll, handleGetCurrentPeriodBill, handleGetPastDueBill, handlePastDuePaid } from '@/src/bills'
-import { handleGetCommunicationCode, handleSetCommunicationCode } from '@/src/communication_code'
-import { handleCompleteUploading, handleDeleteLargeFile, handleGetFileFromStorage, handleListLargeFiles, handleStartUploading, handleUploadPart } from '@/src/large'
-import { error } from '@/src/internal'
+import { withPreprocessed, withAuth } from '@/app/auth'
+import { handleListFiles, handleGetFile, handleDeleteFile, handlePutFile } from '@/app/files'
+import { chargeAll, handleGetCurrentPeriodBill, handleGetPastDueBill, handlePastDuePaid } from '@/app/bills'
+import { handleGetCommunicationCode, handleSetCommunicationCode } from '@/app/communication_code'
+import { handleCompleteUploading, handleDeleteLargeFile, handleGetFileFromStorage, handleListLargeFiles, handleStartUploading, handleUploadPart } from '@/app/large'
+import { error } from '@/app/internal'
 
 
 export default {

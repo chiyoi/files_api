@@ -1,4 +1,4 @@
-import { Env } from '@/src'
+import { Env } from '@/app'
 import { IRequest, json } from 'itty-router'
 
 export const handleGetCommunicationCode = async (request: IRequest, env: Env) => {

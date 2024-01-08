@@ -3,7 +3,7 @@ import { createWalletClient, http } from 'viem'
 import { mnemonicToAccount } from 'viem/accounts'
 import { sepolia } from 'viem/chains'
 import { z } from 'zod'
-import { billingContract } from '@/src/internal'
+import { billingContract } from '@/app/internal'
 
 const account = mnemonicToAccount('slight type universe copper sing flash gospel bubble mix angle stumble social')
 
